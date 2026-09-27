@@ -13,3 +13,18 @@ Harán un servidor con
 Endpoint 2
     Poder consultar quien va ganando en todo momento
 """
+
+
+from flask import Flask, jsonify, request
+import redis
+
+app = Flask(__name__)
+
+r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+
+VOTOS = "votos"
+MATRICULAS = "matriculas"
+
+@app.route("/votacion/votar", methods=["POST"])
+def votar():
+    return "xd"
