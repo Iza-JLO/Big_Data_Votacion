@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Votación</title>
+</head>
+<body>
+    <h2>Votar</h2>
+
+    <input id="matricula" placeholder="Matrícula">
+    <select id="opcion">
+        <option value="java">Java</option>
+        <option value="python">Python</option>
+    </select>
+    <button onclick="votar()">Votar</button>
+
+    <h2>Resultados</h2>
+    <button onclick="cargarResultados()">Ver resultados</button>
+    <pre id="resultados"></pre>
+
+    <script>
+        async function votar() {
+            const payload = {
+                matricula: document.getElementById('matricula').value,
+                opcion: document.getElementById('opcion').value
+            };
+
+            const res = await fetch('/votacion/votar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            alert(JSON.stringify(data));
+            cargarResultados();
+        }
+
+        async function cargarResultados() {
+            const res = await fetch('/resultados');
+            const data = await res.json();
+            document.getElementById('resultados').textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>
