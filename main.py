@@ -1,55 +1,38 @@
-"""
-PRACTICA
+"""Punto de entrada del proyecto.
 
-Harán un servidor con
-
-    Endpoint 1
-        Permitir registrar votos y guardarlos en un sorted set de redis
-        El servidor recibirá la opción por la que votan y la matricula de quien vota
-
-    No se debe poder registrar un voto si esa matricula ya votó
-
-
-Endpoint 2
-    Poder consultar quien va ganando en todo momento
+Este archivo no duplica la lógica del servidor; solo lanza la app real
+implementada en servidor.py y puede ejecutar la demo del cliente si se
+solicita por parámetro.
 """
 
+import argparse
+import threading
+import time
 
-from flask import Flask, jsonify, request
-import redis
-
-app = Flask(__name__)
-
-r = redis.Redis(host="localhost", port=6379, decode_responses=True)
-
-VOTOS = "votos"
-MATRICULAS = "matriculas"
+from cliente import demo_votacion
+from servidor import app
 
 
-#ESTE ES EL PRIMER ENDPOINT: VOTACIONES
-@app.route("/votacion/votar", methods=["POST"])
-def votar():
-    #Datos de entrada desde el json que puse en cliente.py
-    datos_entrada = request.get_json()
-    matricula = datos_entrada["matricula"]
-    opcion = datos_entrada["opcion"]
-
-    if r.sismember(MATRICULAS, matricula): #
-        return jsonify({
-            "mensaje": "La matricula propocionada ya votó. :p"
-        }), 400
-
-    #Cuando la matricula no está registrada en Matriculas:
-    r.zincrby(VOTOS, 1, opcion)   #Esto está padre para revisar
-    r.sadd(MATRICULAS, matricula) #Este también
-
-    return jsonify({
-        "mensaje": "El voto a sido registrado.",
-        "opcion": "opcion"
-    }), 201
+def ejecutar_demo():
+    """Ejecución en segundo plano para no bloquear el arranque del servidor."""
+    time.sleep(1.5)
+    demo_votacion()
 
 
+def main():
+    parser = argparse.ArgumentParser(description="Inicia el servidor de votación.")
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="Ejecuta la demo del cliente tras arrancar el servidor.",
+    )
+    args = parser.parse_args()
 
-#Este bloque es para que arranque el servidor y no se cierre.
+    if args.demo:
+        threading.Thread(target=ejecutar_demo, daemon=True).start()
+
+    app.run(debug=True, port=5001)
+
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    main()
